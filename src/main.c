@@ -7,6 +7,7 @@
 
 
 #include <signal.h>
+#include <stdlib.h>
 
 void clear_down();
 void sig_handler(int sig);
