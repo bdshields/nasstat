@@ -7,6 +7,7 @@
 
 
 #include <signal.h>
+#include <stdlib.h>
 
 #include "lcd_api.h"
 
