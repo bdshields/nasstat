@@ -8,6 +8,8 @@
 
 #include <signal.h>
 
+#include "lcd_api.h"
+
 void clear_down();
 void sig_handler(int sig);
 
@@ -29,6 +31,7 @@ int main(int argc, char *argv[])
 
     // Main loop
     running = 1;
+    int lcd_init();
     while(running)
     {
 
@@ -52,4 +55,5 @@ void sig_handler(int sig)
 void clear_down()
 {
     // Close the lcd connection
+    lcd_close();
 }

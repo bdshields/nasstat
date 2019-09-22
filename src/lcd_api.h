@@ -8,6 +8,8 @@
 #ifndef SRC_LCD_API_H_
 #define SRC_LCD_API_H_
 
+int lcd_init();
+void lcd_close();
 
 
 
