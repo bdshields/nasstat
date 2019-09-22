@@ -1,0 +1,7 @@
+----------------------------------------
+RAID: <state> 
+ free   sda   free  sdb    sdc    sdd   
+        sync        sync          sync
+       <age>       <age>  <age>  <age>
+----------------------------------------
+

@@ -32,11 +32,15 @@ int main(int argc, char *argv[])
 
     // Main loop
     running = 1;
-    int lcd_init();
+    if(lcd_init() == 0)
+    {
+        goto end;
+    }
     while(running)
     {
-
+        lcd_poll();
     }
+end:
     clear_down();
 }
 
@@ -57,4 +61,5 @@ void clear_down()
 {
     // Close the lcd connection
     lcd_close();
+    
 }

@@ -10,6 +10,7 @@
 
 int lcd_init();
 void lcd_close();
+void lcd_poll();
 
 
 
