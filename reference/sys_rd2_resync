@@ -1,0 +1,9 @@
+/sys/block/md666/md/rd2/errors:0
+/sys/block/md666/md/rd2/new_offset:10240
+/sys/block/md666/md/rd2/offset:10240
+/sys/block/md666/md/rd2/ppl_sector:0
+/sys/block/md666/md/rd2/ppl_size:0
+/sys/block/md666/md/rd2/recovery_start:12969320
+/sys/block/md666/md/rd2/size:7981056
+/sys/block/md666/md/rd2/slot:2
+/sys/block/md666/md/rd2/state:spare

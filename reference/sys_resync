@@ -1,0 +1,33 @@
+/sys/block/md666/md/array_size:default
+/sys/block/md666/md/array_state:clean
+/sys/block/md666/md/chunk_size:524288
+/sys/block/md666/md/component_size:7981056
+/sys/block/md666/md/consistency_policy:resync
+/sys/block/md666/md/degraded:1
+/sys/block/md666/md/group_thread_cnt:0
+/sys/block/md666/md/last_sync_action:recovery
+/sys/block/md666/md/layout:2
+/sys/block/md666/md/level:raid5
+/sys/block/md666/md/max_read_errors:20
+/sys/block/md666/md/metadata_version:1.2
+/sys/block/md666/md/mismatch_cnt:0
+/sys/block/md666/md/preread_bypass_threshold:1
+/sys/block/md666/md/raid_disks:3
+/sys/block/md666/md/reshape_direction:forwards
+/sys/block/md666/md/reshape_position:none
+/sys/block/md666/md/resync_start:none
+/sys/block/md666/md/rmw_level:1
+/sys/block/md666/md/safe_mode_delay:0.204
+/sys/block/md666/md/skip_copy:0
+/sys/block/md666/md/stripe_cache_active:266
+/sys/block/md666/md/stripe_cache_size:256
+/sys/block/md666/md/suspend_hi:0
+/sys/block/md666/md/suspend_lo:0
+/sys/block/md666/md/sync_action:recover
+/sys/block/md666/md/sync_completed:7981120 / 15962112
+/sys/block/md666/md/sync_force_parallel:0
+/sys/block/md666/md/sync_max:max
+/sys/block/md666/md/sync_min:0
+/sys/block/md666/md/sync_speed:9501
+/sys/block/md666/md/sync_speed_max:200000 (system)
+/sys/block/md666/md/sync_speed_min:1000 (system)

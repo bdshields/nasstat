@@ -1,0 +1,9 @@
+/sys/block/md666/md/dev-sdc1/errors:0
+/sys/block/md666/md/dev-sdc1/new_offset:10240
+/sys/block/md666/md/dev-sdc1/offset:10240
+/sys/block/md666/md/dev-sdc1/ppl_sector:0
+/sys/block/md666/md/dev-sdc1/ppl_size:0
+/sys/block/md666/md/dev-sdc1/recovery_start:none
+/sys/block/md666/md/dev-sdc1/size:7981056
+/sys/block/md666/md/dev-sdc1/slot:none
+/sys/block/md666/md/dev-sdc1/state:faulty

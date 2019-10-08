@@ -1,0 +1,32 @@
+/dev/md666:
+           Version : 1.2
+     Creation Time : Tue Oct  1 14:54:05 2019
+        Raid Level : raid5
+        Array Size : 15962112 (15.22 GiB 16.35 GB)
+     Used Dev Size : 7981056 (7.61 GiB 8.17 GB)
+      Raid Devices : 3
+     Total Devices : 3
+       Persistence : Superblock is persistent
+
+       Update Time : Tue Oct  1 14:55:01 2019
+             State : clean, degraded, recovering 
+    Active Devices : 2
+   Working Devices : 3
+    Failed Devices : 0
+     Spare Devices : 1
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : resync
+
+    Rebuild Status : 11% complete
+
+              Name : brandon-desktop:666  (local to host brandon-desktop)
+              UUID : 20cd855d:a2b2602d:09ef6461:c25dd4c4
+            Events : 2
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       3       8       33        2      spare rebuilding   /dev/sdc1

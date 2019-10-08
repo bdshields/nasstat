@@ -1,0 +1,6 @@
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md666 : active raid5 sdc1[3] sdb1[1] sda1[0]
+      15962112 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
+      [=>...................]  recovery =  7.1% (572820/7981056) finish=13.0min speed=9482K/sec
+      
+unused devices: <none>

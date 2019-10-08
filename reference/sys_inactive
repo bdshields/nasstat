@@ -1,0 +1,16 @@
+/sys/block/md666/md/array_size:default
+/sys/block/md666/md/array_state:inactive
+grep: /sys/block/md666/md/bitmap: Is a directory
+/sys/block/md666/md/chunk_size:0
+/sys/block/md666/md/component_size:7981056
+/sys/block/md666/md/consistency_policy:unknown
+grep: /sys/block/md666/md/dev-sda1: Is a directory
+grep: /sys/block/md666/md/dev-sdb1: Is a directory
+/sys/block/md666/md/layout:0
+/sys/block/md666/md/max_read_errors:0
+/sys/block/md666/md/metadata_version:1.2
+grep: /sys/block/md666/md/new_dev: Permission denied
+/sys/block/md666/md/reshape_direction:forwards
+/sys/block/md666/md/reshape_position:none
+/sys/block/md666/md/resync_start:0
+/sys/block/md666/md/safe_mode_delay:0.000
