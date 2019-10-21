@@ -9,7 +9,7 @@
  */
 
 #define lcdd_port   13666
-#define lcdd_addr   "192.168.0.10"
+#define lcdd_addr   "127.0.0.1"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -22,65 +22,75 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "lcd_api.h"
+#include "utils.h"
+#include "config_file.h"
 
-#define MAX_SCREENS 1
-#define MAX_WIDGETS 10
+#define LCD_TIMEOUT 10
 
 typedef enum _thing_state{
     none =0,
     init,
-    created,
-    defined,
-    deleted
+    idle,
+    add_widget,
 }thing_state;
 
-typedef enum _widget_type{
-    string,
-    
-}widget_type;
 
-typedef struct _lcd_widget{
-    thing_state state;
-    widget_type type;
-}lcd_widget;
+#define w_name(_a) #_a,
 
-typedef struct _lcd_screen{
-    thing_state state;
-    thing_state lcd_widget[MAX_WIDGETS];
-    
-}lcd_screen;
+char *widget_name[] = {
+    _widget_filler(w_name)
+};
+
+#define bl_name(_a) #_a,
+
+char *scr_bl_name[] = {
+    _scr_bl_filler(bl_name)
+};
+
+
+
+char *scrollname[]={"v","h","m"};
+
 
 typedef struct _lcdd_connection{
     thing_state state;
     int socket;
     int width;
     int height;
-    int current_screen;
-    int current_widget;
-    lcd_screen screen[MAX_SCREENS];
-
 }lcdd_connection;
 
 lcdd_connection lcd_server;
 
 void lcd_sendMessage(char *message, ...);
+void lcd_waitResponse();
 
 
 int lcd_init()
 {
     struct sockaddr_in name;
+    char ip_addr[128];
+    int32_t ip_port;
+
+    if(config_get_string("lcdd_addr", ip_addr) == 0)
+    {
+        strcpy(ip_addr,lcdd_addr);
+    }
+    if(config_get_int("lcdd_port", &ip_port) == 0)
+    {
+        ip_port = lcdd_port;
+    }
+
 
     memset(&lcd_server, 0, sizeof(lcd_server));
-    lcd_server.current_screen == -1;
-    lcd_server.current_widget == -1;
     lcd_server.socket = socket (PF_INET, SOCK_STREAM, 0);
     name.sin_family = AF_INET;
-    name.sin_port = htons (lcdd_port);
-    inet_aton(lcdd_addr,&name.sin_addr);
+    name.sin_port = htons (ip_port);
+    inet_aton(ip_addr,&name.sin_addr);
     
     if(connect(lcd_server.socket, (struct sockaddr *) &name, sizeof(name)) != 0)
     {
-        printf("connect Failed\n");
+        NOTICE("connect Failed\n");
         goto fail;
 
     }
@@ -88,7 +98,6 @@ int lcd_init()
     
     lcd_server.state = init;
     lcd_sendMessage("hello\n");
-    printf("Connected\n");
     return 1;
 
 fail:
@@ -96,81 +105,169 @@ fail:
     return 0;
 }
 
-void lcd_add_screen(int id)
+int lcd_getWidth()
 {
-    if(id >= MAX_SCREENS)
+    if(lcd_server.state == idle)
     {
-        printf("Bad screen id %d (%d)",id,MAX_SCREENS);
-        return;
-    }
-    if(lcd_server.screen[id].state == none)
-    {
-        lcd_sendMessage("screen_add %d\n",id);
-        lcd_server.screen[id].state = init;
-        lcd_server.current_screen = id;
-        lcd_server.current_widget = -1;
+        return lcd_server.width;
     }
     else
     {
-        printf("Screen already created %d",id);
+        return 0;
     }
 }
 
-void lcd_addWidget(int scr, int frame, int id, widget_type type)
+int lcd_getheight()
 {
-    if(id >= MAX_WIDGETS)
+    if(lcd_server.state == idle)
     {
-        printf("Bad widget id %d (%d)",id,MAX_SCREENS);
-        return;
+        return lcd_server.height;
     }
-    if(lcd_server.screen[scr].state == created)
+    else
     {
-        if(lcd_server.screen[scr].widget_state[id].state == none)
+        return 0;
+    }
+}
+
+void lcd_addScreen(char *name)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("screen_add %s\n",name);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't create screen \"%s\", busy\n",name);
+    }
+}
+
+void lcd_setScreenBacklight(char *name, scr_bl mode)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("screen_set %s -backlight %s\n",name,scr_bl_name[mode]);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't set screen backlight mode \"%s\", busy\n", scr_bl_name[mode]);
+    }
+
+}
+
+void lcd_addWidget(widget_id id, char *frame, widget_type type)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        if(frame != NULL)
         {
-            if(frame > -1)
-            {
-                lcd_sendMessage("widget_add %d %d string in %d\n",scr,id,frame);
-            }
-            else
-            {
-                lcd_sendMessage("widget_add %d %d string\n",scr,id);
-            }
-            lcd_server.screen[scr].widget_state[id].state = init;
-            lcd_server.screen[scr].widget_state[id].type = type;
-            lcd_server.current_screen = scr;
-            lcd_server.current_widget = id;
+            lcd_sendMessage("widget_add %s %s %s -in %s\n",id.screen,id.widget, widget_name[type], frame);
         }
         else
         {
-            printf("Screen already created %d",id);
+            lcd_sendMessage("widget_add %s %s %s\n",id.screen,id.widget, widget_name[type]);
         }
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't create %s widget \"%s\", busy\n", widget_name[type],id.widget);
     }
 }
 
-void lcd_setWidget(int scr, int id, char *string)
+void lcd_delWidget(widget_id id)
 {
-    if(lcd_server.screen[scr].widget_state[id].state == created)
+    if(lcd_server.state == idle)
     {
-        lcd_sendMessage("widget_set %d %d 1 1 %s\n",scr,id, string);
+        lcd_server.state = add_widget;
+        lcd_sendMessage("widget_del %s %s\n",id.screen,id.widget);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't delete widget \"%s\", busy\n", id.widget);
     }
 }
+
+void lcd_setString(widget_id id, lcdpos pos, char *string)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("widget_set %s %s %d %d \"%s\"\n",id.screen,id.widget, pos.x, pos.y, string);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't set widget \"%s\", busy\n", id.widget);
+    }
+}
+
+void lcd_setBar(widget_id id, lcdpos pos, int length)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("widget_set %s %s %d %d %d\n",id.screen,id.widget, pos.x, pos.y, length);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't set widget \"%s\", busy\n", id.widget);
+    }
+}
+
+void lcd_setFrame(widget_id id, lcdbox box, lcdspan span, scrolldir dir, int speed)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("widget_set %s %s %d %d %d %d %d %d %s %d\n",id.screen,id.widget, box.left, box.top, box.right, box.bottom, span.width, span.height, scrollname[dir], speed);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't set widget \"%s\", busy\n", id.widget);
+    }
+}
+
 
 void lcd_poll()
 {
     char buffer[1024];
+    char *message;
+    char *end;
     int  length;
     char *param;
     length = recv(lcd_server.socket, buffer, 1024,0);
-    if(length > 0)
+    message = buffer;
+    while(length > 0)
     {
+        end = strchr(message,'\n');
+        if(end)
+        {
+            *end=0;
+            end ++;
+            length -= end - message;
+        }
+        else
+        {
+            // I hope there's no partial message
+            message[length] = 0;
+            length = 0;
+            printf("Partial message\n");
+        }
         // debugging
-        buffer[length] = 0;
-        printf("%s",buffer);
+        DEBUG("%s\n",message);
 
-        if(strncmp(buffer,"connect",7) == 0)
+        if(strncmp(message,"connect",7) == 0)
         {
             // Parse connect message
-            param = strstr(buffer,"lcd");
+            param = strstr(message,"lcd");
             if(param == NULL)
             {
                 goto finish;
@@ -187,35 +284,51 @@ void lcd_poll()
                 goto finish;
             }
             lcd_server.height = strtol(param + 4,NULL,10);
-            printf("LCD is %d x %d",lcd_server.width, lcd_server.height);
-            lcd_server.state = created;
+            DEBUG("LCD is %d x %d\n",lcd_server.width, lcd_server.height);
+            lcd_server.state = idle;
             
-            lcd_add_screen(0);
         }
-        else if(strncmp(buffer,"success",7) == 0)
+        else if(strncmp(message,"success",7) == 0)
         {
-            if(lcd_server.current_widget == -1)
+            if(lcd_server.state == add_widget)
             {
-                if(lcd_server.current_screen >= 0)
-                {
-                    lcd_server.screen[lcd_server.current_screen].state = created;
-                    lcd_server.current_screen = -1;
-                    lcd_server.current_widget = -1;
-                    lcd_addWidget(0,0);
-                }
+                lcd_server.state = idle;
             }
-            else if(lcd_server.current_screen >= 0)
-            {
-                lcd_server.screen[lcd_server.current_screen].widget_state[lcd_server.current_widget].state = created;
-                lcd_server.current_screen = -1;
-                lcd_server.current_widget = -1;
-                lcd_setWidget(0, 0, "\"Hello World\"");
-            }
+        }
+        else if(strncmp(message,"huh?",4) == 0)
+        {
+            // an error occured
+            lcd_server.state = idle;
         }
         
 finish:
-        ;
+        message = end;;
     }
+}
+
+int lcd_busy()
+{
+    if(lcd_server.state != idle)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int lcd_ready()
+{
+    if(lcd_server.state != idle)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+
 }
 
 void lcd_sendMessage(char *message, ...)
@@ -228,9 +341,27 @@ void lcd_sendMessage(char *message, ...)
         va_start (ap, message);
         vsnprintf(send_buffer,1024,message,ap);
         va_end(ap);
-        printf("%s", send_buffer);
+        DEBUG("%s", send_buffer);
         send(lcd_server.socket,send_buffer, strlen(send_buffer), 0);
     }
+}
+
+void lcd_waitResponse()
+{
+    systime timeout;
+    lcd_poll();
+    timeout = set_alarm(LCD_TIMEOUT);
+    while(!alarm_expired(timeout))
+    {
+        lcd_poll();
+        if(lcd_server.state == idle)
+        {
+            break;
+        }
+        frame_sleep(5);
+    }
+    // Timeout, set to idle
+    lcd_server.state = idle;
 }
 
 void lcd_close()

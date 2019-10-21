@@ -1,7 +1,22 @@
+
+RAID Screen 4x40
 ----------------------------------------
-RAID: <state> 
- free   sda   free  sdb    sdc    sdd   
-        sync        sync          sync
-       <age>       <age>  <age>  <age>
+md123: <state> 
+ <dev>  <dev>   <dev> 
+<state> <state><state>
+ <age>  <age>   <age> 
 ----------------------------------------
 
+RAID Screen 2x16
+----------------
+md123: <state>
+< device state >
+----------------
+
+device state frame
+----------------
+#,<state>,<age>
+#,<state>,<age>
+#,<state>,<age>
+#,<state>,<age>
+----------------

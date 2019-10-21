@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#define FILE_NAME ".nasstat"
+#define FILE_NAME "nasstat.conf"
 
 void config_init(char *file_name);
 void config_save(void);
