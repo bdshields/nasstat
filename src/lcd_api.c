@@ -48,6 +48,11 @@ char *scr_bl_name[] = {
     _scr_bl_filler(bl_name)
 };
 
+#define pri_name(_a) #_a,
+
+char *scr_pri_name[] = {
+        _scr_priority_filler(pri_name)
+};
 
 
 char *scrollname[]={"v","h","m"};
@@ -154,6 +159,21 @@ void lcd_setScreenBacklight(char *name, scr_bl mode)
     else
     {
         WARN("Can't set screen backlight mode \"%s\", busy\n", scr_bl_name[mode]);
+    }
+
+}
+
+void lcd_setScreenPriority(char *name, scr_priority priority)
+{
+    if(lcd_server.state == idle)
+    {
+        lcd_server.state = add_widget;
+        lcd_sendMessage("screen_set %s -priority %s\n",name,scr_pri_name[priority]);
+        lcd_waitResponse();
+    }
+    else
+    {
+        WARN("Can't set screen priority \"%s\", busy\n", scr_pri_name[priority]);
     }
 
 }

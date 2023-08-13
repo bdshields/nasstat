@@ -32,6 +32,7 @@ typedef enum _md_state{
 #define RAID_STAT(_func) \
     _func(none)   \
     _func(clean    )   \
+    _func(check    )   \
     _func(degraded )   \
     _func(resync)      \
     _func(rebuild  )   \
@@ -133,7 +134,8 @@ void md_init()
     // Build the display
     lcd_addScreen(RAID_SCR);
 
-    lcd_setScreenBacklight(RAID_SCR, bl_on);
+    lcd_setScreenBacklight(RAID_SCR, bl_off);
+    lcd_setScreenPriority(RAID_SCR, pri_info);
 
     md_initRaidWidgets();
 
@@ -162,13 +164,15 @@ void md_proc()
                 // Expire other timers
                 ext_update = set_alarm(0);
                 rd_update = set_alarm(0);
-                if(status == clean)
+                if((status == clean) || (status == check))
                 {
-                    lcd_setScreenBacklight(RAID_SCR, bl_on);
+                    lcd_setScreenBacklight(RAID_SCR, bl_off);
+                    lcd_setScreenPriority(RAID_SCR, pri_info);
                 }
                 else
                 {
                     lcd_setScreenBacklight(RAID_SCR, bl_flash);
+                    lcd_setScreenPriority(RAID_SCR, pri_alert);
                 }
                 md_lastStatus = status;
             }
@@ -183,7 +187,6 @@ void md_proc()
                     md_updateState(md_statStr[status],progress);
                 }
             }
-
 
             if(alarm_expired(rd_update))
             {
@@ -246,19 +249,18 @@ void rd_initSlaveWidgets()
     char label[64];
     // Main RD widget frame
     lcd_addWidget(SLAVE_FRAME, NULL, frame);
-    lcd_setFrame(SLAVE_FRAME, _BOX(1,2,lcd_getWidth(),4), _SPAN(40,3), h, 80);
+    lcd_setFrame(SLAVE_FRAME, _BOX(1,2,lcd_getWidth(),lcd_getheight()), _SPAN(30,lcd_getheight()-1), h, 4);
     disk_idx = 0;
     // Create frame per device
     while(md_array[disk_idx].dev[0] != 0)
     {
         snprintf(label, 64,"%d_FRAME",disk_idx);
         lcd_addWidget(_ID(RAID_SCR,label), SLAVE_FRAME_ID, frame);
-        lcd_setFrame(_ID(RAID_SCR,label), _BOX((disk_idx * 10) + 1,1,(disk_idx * 10) + 10,3), _SPAN(10,3), v, 0);
+        lcd_setFrame(_ID(RAID_SCR,label), _BOX((disk_idx * 10) + 1,1,(disk_idx * 10) + 10,lcd_getheight()-1), _SPAN(10,3), v, 16);
 
         lcd_addWidget(RD_DISK(disk_idx), label, string);
         lcd_addWidget(RD_STATE(disk_idx), label, string);
         lcd_addWidget(RD_AGE(disk_idx), label, string);
-
 
         disk_idx++;
     }
@@ -319,6 +321,44 @@ md_raidStatus md_getRaidState(float *progress)
     {
         state = clean;
     }
+    // Check current sync action
+    snprintf(filename,1024,"/sys/block/%s/md/sync_action",md_conf.dev_name);
+    fd = open(filename,0);
+    if(fd < 0)
+    {
+        state = degraded;
+        goto end;
+    }
+    size = read(fd, contents,256);
+    close(fd);
+    if(size < 1)
+    {
+        state = degraded;
+        goto end;
+    }
+    if(strncmp(contents,"idle",4) == 0)
+    {
+        // no sync in progress
+        goto end;
+    }
+    else if(strncmp(contents,"check",4) == 0)
+    {
+        if(state == clean)
+        {
+            state = check;
+        }
+    }
+    else
+    {
+        if(state == clean)
+        {
+            state = resync;
+        }
+        else
+        {
+            state = rebuild;
+        }
+    }
     // Check sync progress
     snprintf(filename,1024,"/sys/block/%s/md/sync_completed",md_conf.dev_name);
     fd = open(filename,0);
@@ -338,17 +378,6 @@ md_raidStatus md_getRaidState(float *progress)
     {
         // Sync not in progress
         goto end;
-    }
-    else
-    {
-        if(state == clean)
-        {
-            state = resync;
-        }
-        else
-        {
-            state = rebuild;
-        }
     }
     // get progress
     if(progress != NULL)

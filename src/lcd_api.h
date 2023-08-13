@@ -58,6 +58,21 @@ typedef enum _scr_bl{
     _scr_bl_filler(bl_enum)
 }scr_bl;
 
+#define _scr_priority_filler(_func) \
+_func(hidden) \
+_func(background) \
+_func(info) \
+_func(foreground) \
+_func(alert) \
+_func(input)
+
+#define pri_enum(_a) pri_##_a,
+
+typedef enum _scr_priority{
+    _scr_priority_filler(pri_enum)
+}scr_priority;
+
+
 typedef struct _lcdbox{
     int left;
     int top;
@@ -95,6 +110,7 @@ static inline char * _id(int value, char *suffix)
 
 void lcd_addScreen(char *name);
 void lcd_setScreenBacklight(char *name, scr_bl mode);
+void lcd_setScreenPriority(char *name, scr_priority priority);
 
 
 void lcd_addWidget(widget_id id, char * frame, widget_type type);
